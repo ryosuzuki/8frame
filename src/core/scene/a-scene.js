@@ -149,10 +149,15 @@ module.exports.AScene = registerElement('a-scene', {
             resize();
           }
         });
-        this.play();
 
-        // Add to scene index.
-        scenes.push(this);
+        const onPlay = () => {
+          this.play();
+
+          // Add to scene index.
+          scenes.push(this);
+        };
+
+        window.XR ? onPlay() : window.addEventListener('xrloaded', onPlay);
       },
       writable: window.debug
     },
