@@ -1,39 +1,4 @@
-var error = require('debug')('device:error');
-
 var vrDisplay;
-
-// Catch vrdisplayactivate early to ensure we can enter VR mode after the scene loads.
-window.addEventListener('vrdisplayactivate', function (evt) {
-  var canvasEl;
-  // WebXR takes priority if available.
-  if (navigator.xr) { return; }
-  canvasEl = document.createElement('canvas');
-  vrDisplay = evt.display;
-  // Request present immediately. a-scene will be allowed to enter VR without user gesture.
-  vrDisplay.requestPresent([{source: canvasEl}]).then(function () {}, function () {});
-});
-
-// Support both WebVR and WebXR APIs.
-if (navigator.xr) {
-  navigator.xr.requestDevice().then(function (device) {
-    if (!device) { return; }
-    device.supportsSession({immersive: true, exclusive: true}).then(function () {
-      var sceneEl = document.querySelector('a-scene');
-      vrDisplay = device;
-      if (sceneEl) { sceneEl.emit('displayconnected', {vrDisplay: vrDisplay}); }
-    });
-  }).catch(function (err) {
-    error('WebXR Request Device: ' + err.message);
-  });
-} else {
-  if (navigator.getVRDisplays) {
-    navigator.getVRDisplays().then(function (displays) {
-      var sceneEl = document.querySelector('a-scene');
-      vrDisplay = displays.length && displays[0];
-      if (sceneEl) { sceneEl.emit('displayconnected', {vrDisplay: vrDisplay}); }
-    });
-  }
-}
 
 module.exports.isWebXRAvailable = navigator.xr !== undefined;
 

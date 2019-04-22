@@ -1,3 +1,9 @@
+// Prevent native WebXR implementation from impeding 8th Wall XR
+if (window.XR && typeof window.XR === 'function') {
+  window.nativeXR = window.XR;
+  window.XR = undefined;
+}
+
 // Polyfill `Promise`.
 window.Promise = window.Promise || require('promise-polyfill');
 
