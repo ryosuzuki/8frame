@@ -197,14 +197,6 @@ module.exports.AScene = registerElement('a-scene', {
         // Remove from scene index.
         var sceneIndex = scenes.indexOf(this);
         scenes.splice(sceneIndex, 1);
-
-        window.removeEventListener('vrdisplaypresentchange', this.onVRPresentChangeBound);
-        window.removeEventListener('vrdisplayactivate', this.enterVRBound);
-        window.removeEventListener('vrdisplaydeactivate', this.exitVRBound);
-        window.removeEventListener('vrdisplayconnect', this.enterVRBound);
-        window.removeEventListener('vrdisplaydisconnect', this.exitVRTrueBound);
-        window.removeEventListener('vrdisplaypointerrestricted', this.pointerRestrictedBound);
-        window.removeEventListener('vrdisplaypointerunrestricted', this.pointerUnrestrictedBound);
       }
     },
 
