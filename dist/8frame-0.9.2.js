@@ -28370,6 +28370,8 @@ module.exports = anime;
 			_this.capabilities = capabilities;
 			_this.extensions = extensions;
 			_this.properties = properties;
+			_this.attributes = attributes;
+			_this.geometries = geometries;
 			_this.renderLists = renderLists;
 			_this.state = state;
 			_this.info = info;
@@ -63500,6 +63502,7 @@ module.exports={
     "ghpages": "ghpages -p gh-pages/",
     "lint": "semistandard -v | snazzy",
     "lint:fix": "semistandard --fix",
+    "postinstall": "patch-package",
     "precommit": "npm run lint",
     "prepush": "node scripts/testOnlyCheck.js",
     "prerelease": "node scripts/release.js 0.9.1 0.9.2",
@@ -63569,6 +63572,7 @@ module.exports={
     "minifyify": "^7.3.3",
     "mocha": "^3.0.2",
     "mozilla-download": "^1.1.1",
+    "patch-package": "^6.2.0",
     "replace-in-file": "^2.5.3",
     "semistandard": "^9.0.0",
     "shelljs": "^0.7.7",
@@ -77091,7 +77095,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('8-Frame Version: 0.9.2 (Date 2019-11-26, Commit #3223f2f7)');
+console.log('8-Frame Version: 0.9.2 (Date 2019-12-06, Commit #991729a1)');
 console.log('three Version (https://github.com/supermedium/three.js):',
             pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
