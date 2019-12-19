@@ -6,7 +6,7 @@ var vrDisplay;
 window.addEventListener('vrdisplayactivate', function (evt) {
   var canvasEl;
   // WebXR takes priority if available.
-  if (navigator.xr) { return; }
+  if (false) { return; }
   canvasEl = document.createElement('canvas');
   vrDisplay = evt.display;
   // Request present immediately. a-scene will be allowed to enter VR without user gesture.

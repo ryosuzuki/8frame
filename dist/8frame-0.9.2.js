@@ -77011,7 +77011,7 @@ window.Promise = window.Promise || _dereq_('promise-polyfill');
 // Check before the polyfill runs.
 window.hasNativeWebVRImplementation = !!window.navigator.getVRDisplays ||
                                       !!window.navigator.getVRDevices;
-window.hasNativeWebXRImplementation = navigator.xr !== undefined;
+window.hasNativeWebXRImplementation = false;
 
 // If native WebXR or WebVR are defined WebVRPolyfill does not initialize.
 if (!window.hasNativeWebXRImplementation && !window.hasNativeWebVRImplementation) {
@@ -77095,7 +77095,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('8-Frame Version: 0.9.2 (Date 2019-12-06, Commit #991729a1)');
+console.log('8-Frame Version: 0.9.2 (Date 2019-12-19, Commit #9ea3e057)');
 console.log('three Version (https://github.com/supermedium/three.js):',
             pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
@@ -79148,7 +79148,7 @@ var vrDisplay;
 window.addEventListener('vrdisplayactivate', function (evt) {
   var canvasEl;
   // WebXR takes priority if available.
-  if (navigator.xr) { return; }
+  if (false) { return; }
   canvasEl = document.createElement('canvas');
   vrDisplay = evt.display;
   // Request present immediately. a-scene will be allowed to enter VR without user gesture.
