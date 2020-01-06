@@ -1,0 +1,13 @@
+diff --git a/node_modules/super-three/build/three.js b/node_modules/super-three/build/three.js
+index 81144b3..0d73a7f 100644
+--- a/node_modules/super-three/build/three.js
++++ b/node_modules/super-three/build/three.js
+@@ -23916,6 +23916,8 @@
+ 			_this.capabilities = capabilities;
+ 			_this.extensions = extensions;
+ 			_this.properties = properties;
++			_this.attributes = attributes;
++			_this.geometries = geometries;
+ 			_this.renderLists = renderLists;
+ 			_this.state = state;
+ 			_this.info = info;
