@@ -592,7 +592,8 @@ module.exports.AScene = registerElement('a-scene', {
           alpha: true,
           antialias: !isMobile,
           canvas: this.canvas,
-          logarithmicDepthBuffer: false
+          logarithmicDepthBuffer: false,
+          preserveDrawingBuffer: true
         };
 
         this.maxCanvasSize = {height: 1920, width: 1920};
@@ -615,6 +616,10 @@ module.exports.AScene = registerElement('a-scene', {
 
           if (rendererAttr.alpha) {
             rendererConfig.alpha = rendererAttr.alpha === 'true';
+          }
+
+          if (rendererAttr.preserveDrawingBuffer) {
+            rendererConfig.preserveDrawingBuffer = rendererAttr.preserveDrawingBuffer === 'true';
           }
 
           this.maxCanvasSize = {
