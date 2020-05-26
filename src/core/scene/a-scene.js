@@ -135,10 +135,9 @@ module.exports.AScene = registerElement('a-scene', {
 
     attachedCallbackPostCamera: {
       value: function () {
-        var resize;
         var self = this;
 
-        window.addEventListener('load', resize);
+        window.addEventListener('load', self.resize);
         window.addEventListener('resize', function () {
           // Workaround for a Webkit bug (https://bugs.webkit.org/show_bug.cgi?id=170595)
           // where the window does not contain the correct viewport size
@@ -148,7 +147,7 @@ module.exports.AScene = registerElement('a-scene', {
           if (self.isIOS) {
             setTimeout(self.resize, 100);
           } else {
-            resize();
+            self.resize();
           }
         });
 
