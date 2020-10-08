@@ -67217,7 +67217,7 @@ module.exports={
     "build": "shx mkdir -p build/ && npm run browserify -- --debug -t [ envify --INSPECTOR_VERSION dev ] -o build/aframe.js",
     "codecov": "codecov",
     "dev": "npm run build && cross-env INSPECTOR_VERSION=dev node ./scripts/budo -t envify",
-    "dist": "node scripts/updateVersionLog.js && npm run dist:min && npm run dist:max",
+    "dist": "node scripts/updateVersionLog.js && node scripts/buildTo.js",
     "dist:max": "npm run browserify -s -- --debug | exorcist dist/aframe-master.js.map > dist/aframe-master.js",
     "dist:min": "npm run browserify -s -- --debug -p [ minifyify --map aframe-master.min.js.map --output dist/aframe-master.min.js.map ] -o dist/aframe-master.min.js",
     "docs": "markserv --dir docs --port 9001",
@@ -80536,6 +80536,8 @@ module.exports.AScene = registerElement('a-scene', {
           antialias: !isMobile,
           canvas: this.canvas,
           logarithmicDepthBuffer: false,
+          // necessary for media recorder/canvas screenshot on iOS
+          preserveDrawingBuffer: true,
           powerPreference: 'high-performance'
         };
 
@@ -80559,6 +80561,11 @@ module.exports.AScene = registerElement('a-scene', {
 
           if (rendererAttr.alpha) {
             rendererConfig.alpha = rendererAttr.alpha === 'true';
+          }
+
+          // necessary for media recorder/canvas screenshot on iOS
+          if (rendererAttr.preserveDrawingBuffer) {
+            rendererConfig.preserveDrawingBuffer = rendererAttr.preserveDrawingBuffer === 'true';
           }
 
           this.maxCanvasSize = {
@@ -87236,4 +87243,4 @@ module.exports = getWakeLock();
 
 },{"./util.js":196}]},{},[154])(154)
 });
-//# sourceMappingURL=aframe-master.js.map
+//# sourceMappingURL=8frame-master.js.map

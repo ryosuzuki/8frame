@@ -65,8 +65,10 @@ module.exports.AScene = registerElement('a-scene', {
         this.setAttribute('inspector', '');
         this.setAttribute('keyboard-shortcuts', '');
         this.setAttribute('screenshot', '');
-        this.setAttribute('vr-mode-ui', '');
-        this.setAttribute('device-orientation-permission-ui', '');
+        // Remove vr-mode-ui from defaults
+        // this.setAttribute('vr-mode-ui', '');
+        // Remove device permission prompt
+        // this.setAttribute('device-orientation-permission-ui', '');
       }
     },
 
@@ -153,7 +155,15 @@ module.exports.AScene = registerElement('a-scene', {
             self.resize();
           }
         });
-        this.play();
+        // wait for XR before play
+        function onPlay () {
+          self.play();
+
+          // Add to scene index.
+          scenes.push(self);
+        }
+
+        window.XR8 ? onPlay() : window.addEventListener('xrloaded', onPlay);
 
         // Add to scene index.
         scenes.push(this);
@@ -594,6 +604,8 @@ module.exports.AScene = registerElement('a-scene', {
           antialias: !isMobile,
           canvas: this.canvas,
           logarithmicDepthBuffer: false,
+          // necessary for media recorder/canvas screenshot on iOS
+          preserveDrawingBuffer: true,
           powerPreference: 'high-performance'
         };
 
@@ -617,6 +629,11 @@ module.exports.AScene = registerElement('a-scene', {
 
           if (rendererAttr.alpha) {
             rendererConfig.alpha = rendererAttr.alpha === 'true';
+          }
+
+          // necessary for media recorder/canvas screenshot on iOS
+          if (rendererAttr.preserveDrawingBuffer) {
+            rendererConfig.preserveDrawingBuffer = rendererAttr.preserveDrawingBuffer === 'true';
           }
 
           this.maxCanvasSize = {

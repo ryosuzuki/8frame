@@ -1,0 +1,271 @@
+diff --git a/package.json b/package.json
+index a424d761..24e619b6 100644
+--- a/package.json
++++ b/package.json
+@@ -9,7 +9,7 @@
+     "build": "shx mkdir -p build/ && npm run browserify -- --debug -t [ envify --INSPECTOR_VERSION dev ] -o build/aframe.js",
+     "codecov": "codecov",
+     "dev": "npm run build && cross-env INSPECTOR_VERSION=dev node ./scripts/budo -t envify",
+-    "dist": "node scripts/updateVersionLog.js && npm run dist:min && npm run dist:max",
++    "dist": "node scripts/updateVersionLog.js && node scripts/buildTo.js",
+     "dist:max": "npm run browserify -s -- --debug | exorcist dist/aframe-master.js.map > dist/aframe-master.js",
+     "dist:min": "npm run browserify -s -- --debug -p [ minifyify --map aframe-master.min.js.map --output dist/aframe-master.min.js.map ] -o dist/aframe-master.min.js",
+     "docs": "markserv --dir docs --port 9001",
+@@ -17,6 +17,7 @@
+     "ghpages": "ghpages -p gh-pages/",
+     "lint": "semistandard -v | snazzy",
+     "lint:fix": "semistandard --fix",
++    "postinstall": "patch-package",
+     "precommit": "npm run lint",
+     "prepush": "node scripts/testOnlyCheck.js",
+     "prerelease": "node scripts/release.js 1.0.3 1.0.4",
+@@ -85,6 +86,7 @@
+     "minifyify": "^7.3.3",
+     "mocha": "^3.0.2",
+     "mozilla-download": "^1.1.1",
++    "patch-package": "^6.2.0",
+     "replace-in-file": "^2.5.3",
+     "semistandard": "^9.0.0",
+     "shelljs": "^0.7.7",
+diff --git a/scripts/buildTo.js b/scripts/buildTo.js
+new file mode 100644
+index 00000000..ea36dd01
+--- /dev/null
++++ b/scripts/buildTo.js
+@@ -0,0 +1,15 @@
++var execSync = require('child_process').execSync;
++var pkg = require('../package.json');
++
++var name = process.argv[2] || '8frame-master';
++
++console.log('Building 8frame as:', name);
++
++const distMin = pkg.scripts['dist:min'].replace(/aframe-master/g, name);
++const distMax = pkg.scripts['dist:max'].replace(/aframe-master/g, name);
++
++console.log('>', distMin);
++execSync(distMin, {stdio: 'inherit'});
++
++console.log('>', distMax);
++execSync(distMax, {stdio: 'inherit'});
+diff --git a/scripts/updateVersionLog.js b/scripts/updateVersionLog.js
+index 817bcad9..b82b1e08 100644
+--- a/scripts/updateVersionLog.js
++++ b/scripts/updateVersionLog.js
+@@ -11,7 +11,7 @@ const timestamp = getBuildTimestamp();
+ gitRev.short(hash => {
+   const newContents = contents.replace(
+     /console.log\('A-Frame Version:.*\)/,
+-    `console.log('A-Frame Version: ${pkg.version} (Date ${timestamp}, Commit #${hash})')`);
++    `console.log('8-Frame Version: ${pkg.version} (Date ${timestamp}, Commit #${hash})')`);
+   fs.writeFileSync('./src/index.js', newContents);
+ });
+ 
+diff --git a/src/components/look-controls.js b/src/components/look-controls.js
+index 52e2c376..bacebe15 100644
+--- a/src/components/look-controls.js
++++ b/src/components/look-controls.js
+@@ -59,7 +59,10 @@ module.exports.Component = registerComponent('look-controls', {
+       magicWindowControls = this.magicWindowControls = new THREE.DeviceOrientationControls(this.magicWindowObject);
+       if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) {
+         magicWindowControls.enabled = false;
+-        if (this.el.sceneEl.components['device-orientation-permission-ui'].permissionGranted) {
++        // remove device permission prompt
++        const permissionComponent = this.el.sceneEl.components['device-orientation-permission-ui'];
++        const isWaitingOnPermission = permissionComponent && !permissionComponent.permissionGranted;
++        if (!isWaitingOnPermission) {
+           magicWindowControls.enabled = data.magicWindowTrackingEnabled;
+         } else {
+           this.el.sceneEl.addEventListener('deviceorientationpermissiongranted', function () {
+diff --git a/src/components/material.js b/src/components/material.js
+index 5842c40e..4eb07b5d 100644
+--- a/src/components/material.js
++++ b/src/components/material.js
+@@ -134,7 +134,8 @@ module.exports.Component = registerComponent('material', {
+     material.opacity = data.opacity;
+     material.flatShading = data.flatShading;
+     material.side = parseSide(data.side);
+-    material.transparent = data.transparent !== false || data.opacity < 1.0;
++    // allow shadow shader to be a default shader
++    material.transparent = data.transparent !== false || data.opacity < 1.0 || data.shader === 'shadow';
+     material.vertexColors = parseVertexColors(data.vertexColors);
+     material.visible = data.visible;
+     material.blending = parseBlending(data.blending);
+diff --git a/src/core/component.js b/src/core/component.js
+index a64db496..6cab1189 100644
+--- a/src/core/component.js
++++ b/src/core/component.js
+@@ -653,6 +653,12 @@ module.exports.registerComponent = function (name, definition) {
+   });
+ 
+   if (components[name]) {
++    // prevent error if registering xrweb twice
++    if (name === 'xrweb') {
++      warn('xrweb component is being registered multiple times.');
++      return components[name];
++    }
++
+     throw new Error('The component `' + name + '` has been already registered. ' +
+                     'Check that you are not loading two versions of the same component ' +
+                     'or two different components of the same name.');
+diff --git a/src/core/scene/a-scene.js b/src/core/scene/a-scene.js
+index c84ce134..ff4025df 100644
+--- a/src/core/scene/a-scene.js
++++ b/src/core/scene/a-scene.js
+@@ -65,8 +65,10 @@ module.exports.AScene = registerElement('a-scene', {
+         this.setAttribute('inspector', '');
+         this.setAttribute('keyboard-shortcuts', '');
+         this.setAttribute('screenshot', '');
+-        this.setAttribute('vr-mode-ui', '');
+-        this.setAttribute('device-orientation-permission-ui', '');
++        // Remove vr-mode-ui from defaults
++        // this.setAttribute('vr-mode-ui', '');
++        // Remove device permission prompt
++        // this.setAttribute('device-orientation-permission-ui', '');
+       }
+     },
+ 
+@@ -153,7 +155,15 @@ module.exports.AScene = registerElement('a-scene', {
+             self.resize();
+           }
+         });
+-        this.play();
++        // wait for XR before play
++        function onPlay () {
++          self.play();
++
++          // Add to scene index.
++          scenes.push(self);
++        }
++
++        window.XR8 ? onPlay() : window.addEventListener('xrloaded', onPlay);
+ 
+         // Add to scene index.
+         scenes.push(this);
+@@ -594,6 +604,8 @@ module.exports.AScene = registerElement('a-scene', {
+           antialias: !isMobile,
+           canvas: this.canvas,
+           logarithmicDepthBuffer: false,
++          // necessary for media recorder/canvas screenshot on iOS
++          preserveDrawingBuffer: true,
+           powerPreference: 'high-performance'
+         };
+ 
+@@ -619,6 +631,11 @@ module.exports.AScene = registerElement('a-scene', {
+             rendererConfig.alpha = rendererAttr.alpha === 'true';
+           }
+ 
++          // necessary for media recorder/canvas screenshot on iOS
++          if (rendererAttr.preserveDrawingBuffer) {
++            rendererConfig.preserveDrawingBuffer = rendererAttr.preserveDrawingBuffer === 'true';
++          }
++
+           this.maxCanvasSize = {
+             width: rendererAttr.maxCanvasWidth
+               ? parseInt(rendererAttr.maxCanvasWidth)
+diff --git a/src/core/scene/loadingScreen.js b/src/core/scene/loadingScreen.js
+index efe43fc7..0a522cf6 100644
+--- a/src/core/scene/loadingScreen.js
++++ b/src/core/scene/loadingScreen.js
+@@ -15,7 +15,8 @@ module.exports.setup = function setup (el, getCanvasSize) {
+   var loaderAttribute = sceneEl.hasAttribute(ATTR_NAME) ? styleParser.parse(sceneEl.getAttribute(ATTR_NAME)) : undefined;
+   var dotsColor = loaderAttribute && loaderAttribute.dotsColor || 'white';
+   var backgroundColor = loaderAttribute && loaderAttribute.backgroundColor || '#24CAFF';
+-  var loaderEnabled = loaderAttribute === undefined || loaderAttribute.enabled === 'true' || loaderAttribute.enabled === undefined; // true default
++  // we want to disable the loading screen by default
++  var loaderEnabled = loaderAttribute && (loaderAttribute.enabled === 'true' || loaderAttribute.enabled === undefined); // Disabled by default
+   var loaderScene;
+   var sphereGeometry;
+   var sphereMaterial;
+diff --git a/src/core/scene/metaTags.js b/src/core/scene/metaTags.js
+index b93d18aa..849d9eb8 100644
+--- a/src/core/scene/metaTags.js
++++ b/src/core/scene/metaTags.js
+@@ -10,10 +10,8 @@ var MOBILE_HEAD_TAGS = module.exports.MOBILE_HEAD_TAGS = [
+ ];
+ 
+ var MOBILE_IOS_HEAD_TAGS = [
+-  // iOS-specific meta tags for fullscreen when pinning to homescreen.
+-  Meta({name: 'apple-mobile-web-app-capable', content: 'yes'}),
+-  Meta({name: 'apple-mobile-web-app-status-bar-style', content: 'black'}),
+-  Link({rel: 'apple-touch-icon', href: 'https://aframe.io/images/aframe-logo-152.png'})
++  // Remove iOS PWA meta tags
++  Meta({name: 'apple-mobile-web-app-capable', content: 'no'})
+ ];
+ 
+ function Meta (attrs) {
+@@ -24,14 +22,6 @@ function Meta (attrs) {
+   };
+ }
+ 
+-function Link (attrs) {
+-  return {
+-    tagName: 'link',
+-    attributes: attrs,
+-    exists: function () { return document.querySelector('link[rel="' + attrs.rel + '"]'); }
+-  };
+-}
+-
+ /**
+  * Injects the necessary metatags in the document for mobile support:
+  * 1. Prevent the user to zoom in the document.
+diff --git a/src/index.js b/src/index.js
+index 74376e49..a8a641c8 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -90,7 +90,7 @@ require('./core/a-mixin');
+ require('./extras/components/');
+ require('./extras/primitives/');
+ 
+-console.log('A-Frame Version: 1.0.4 (Date 2020-10-05, Commit #da238996)');
++console.log('8-Frame Version: 1.0.4 (Date 2020-10-07, Commit #8b0d5e89)');
+ console.log('THREE Version (https://github.com/supermedium/three.js):',
+             pkg.dependencies['super-three']);
+ console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
+@@ -122,3 +122,8 @@ module.exports = window.AFRAME = {
+   utils: utils,
+   version: pkg.version
+ };
++
++// If 8frame loads after XR8, manually register the component
++if (window.XR8) {
++  window.AFRAME.registerComponent('xrweb', window.XR8.AFrame.xrwebComponent());
++}
+diff --git a/src/shaders/index.js b/src/shaders/index.js
+index a62776d9..d2ee9b47 100755
+--- a/src/shaders/index.js
++++ b/src/shaders/index.js
+@@ -3,3 +3,4 @@ require('./standard');
+ require('./sdf');
+ require('./msdf');
+ require('./ios10hls');
++require('./shadow');
+diff --git a/src/shaders/shadow.js b/src/shaders/shadow.js
+new file mode 100644
+index 00000000..29185c4d
+--- /dev/null
++++ b/src/shaders/shadow.js
+@@ -0,0 +1,23 @@
++var registerShader = require('../core/shader').registerShader;
++var THREE = require('../lib/three');
++
++/**
++ * AR shadow shader using THREE.ShadowMaterial.
++ */
++module.exports.Shader = registerShader('shadow', {
++  schema: {
++    color: {type: 'color', default: 0x0},
++    opacity: {default: 0.4, min: 0.0, max: 1.0}
++  },
++
++  init: function (data) {
++    this.rendererSystem = this.el.sceneEl.systems.renderer;
++    this.material = new THREE.ShadowMaterial();
++  },
++
++  update: function (data) {
++    this.material.opacity = data.opacity;
++    this.material.color.set(data.color);
++    this.rendererSystem.applyColorCorrection(this.material.color);
++  }
++});

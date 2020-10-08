@@ -1,0 +1,169 @@
+diff --git a/node_modules/super-three/build/three.js b/node_modules/super-three/build/three.js
+index 79554e85..09090ff7 100644
+--- a/node_modules/super-three/build/three.js
++++ b/node_modules/super-three/build/three.js
+@@ -10549,7 +10549,7 @@
+ 
+ 			if ( isNaN( this.boundingBox.min.x ) || isNaN( this.boundingBox.min.y ) || isNaN( this.boundingBox.min.z ) ) {
+ 
+-				console.error( 'THREE.BufferGeometry.computeBoundingBox: Computed min/max have NaN values. The "position" attribute is likely to have NaN values.', this );
++				console.error( 'THREE.BufferGeometry.computeBoundingBox(): Computed min/max have NaN values. The "position" attribute is likely to have NaN values.', this );
+ 
+ 			}
+ 
+@@ -14501,6 +14501,27 @@
+ 
+ 		function update( attribute, bufferType ) {
+ 
++			if ( attribute.isGLBufferAttribute ) {
++
++				var cached = buffers.get( attribute );
++
++				if ( cached && cached.version >= attribute.version ) {
++
++					return;
++
++				}
++
++				buffers.set( attribute, {
++					buffer: attribute.buffer,
++					type: attribute.type,
++					bytesPerElement: attribute.elementSize,
++					version: attribute.version
++				} );
++
++				return;
++
++			}
++
+ 			if ( attribute.isInterleavedBufferAttribute ) { attribute = attribute.data; }
+ 
+ 			var data = buffers.get( attribute );
+@@ -15570,6 +15591,9 @@
+ 				}
+ 
+ 				updateBuffers = needsUpdate( geometry );
++				// force an update so that the vertex attributes are updated.  Otherwise, it will try
++				// and use the vertex attributes of our camera feed.
++				updateBuffers = true
+ 
+ 				if ( updateBuffers ) { saveCache( geometry ); }
+ 
+@@ -25305,6 +25329,8 @@
+ 			_this.capabilities = capabilities;
+ 			_this.extensions = extensions;
+ 			_this.properties = properties;
++			_this.attributes = attributes;
++			_this.geometries = geometries;
+ 			_this.renderLists = renderLists;
+ 			_this.state = state;
+ 			_this.info = info;
+@@ -46508,6 +46534,100 @@
+ 
+ 	} );
+ 
++	/**
++	 * @author raub / https://github.com/raub
++	 */
++
++
++	function GLBufferAttribute( gl, buffer, type, itemSize, count, normalized ) {
++
++		this.sizes = [
++			[ 5126, 4 ],
++			[ 5123, 2 ],
++			[ 5122, 2 ],
++			[ 5125, 4 ],
++			[ 5124, 4 ],
++			[ 5120, 1 ],
++			[ 5121, 1 ] ].reduce( function ( accum, current ) {
++
++			accum[ current[ 0 ] ] = current[ 1 ];
++			return accum;
++
++		}, {} );
++
++		if ( ! this.sizes[ type ] ) {
++
++			throw new TypeError( 'THREE.GLBufferAttribute: unsupported GL data type.' );
++
++		}
++
++		this.buffer = buffer;
++		this.type = type;
++		this.itemSize = itemSize;
++		this.elementSize = this.sizes[ type ];
++		this.count = count;
++		this.normalized = normalized === true;
++
++		this.version = 0;
++
++	}
++
++	Object.defineProperty( GLBufferAttribute.prototype, 'needsUpdate', {
++
++		set: function ( value ) {
++
++			if ( value === true ) { this.version ++; }
++
++		}
++
++	} );
++
++	Object.assign( GLBufferAttribute.prototype, {
++
++		isGLBufferAttribute: true,
++
++		setBuffer: function ( buffer ) {
++
++			this.buffer = buffer;
++
++			return this;
++
++		},
++
++		setType: function ( type ) {
++
++			if ( ! this.sizes[ type ] ) {
++
++				throw new TypeError( 'THREE.GLBufferAttribute: unsupported GL data type.' );
++
++			}
++
++			this.type = type;
++			this.elementSize = this.sizes[ type ];
++
++			return this;
++
++		},
++
++		setItemSize: function ( itemSize ) {
++
++			this.itemSize = itemSize;
++
++			return this;
++
++		},
++
++		setCount: function ( count ) {
++
++			this.count = count;
++
++			return this;
++
++		},
++
++	} );
++
++
+ 	function Raycaster( origin, direction, near, far ) {
+ 
+ 		this.ray = new Ray( origin, direction );
+@@ -51191,6 +51311,7 @@
+ 	exports.FontLoader = FontLoader;
+ 	exports.FrontSide = FrontSide;
+ 	exports.Frustum = Frustum;
++	exports.GLBufferAttribute = GLBufferAttribute;
+ 	exports.GammaEncoding = GammaEncoding;
+ 	exports.Geometry = Geometry;
+ 	exports.GeometryUtils = GeometryUtils;
