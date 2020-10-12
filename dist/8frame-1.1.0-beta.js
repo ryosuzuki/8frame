@@ -87518,4 +87518,4 @@ module.exports = getWakeLock();
 
 },{"./util.js":196}]},{},[154])(154)
 });
-//# sourceMappingURL=8frame-master.js.map
+//# sourceMappingURL=8frame-1.1.0-beta.js.map
