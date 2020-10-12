@@ -20988,6 +20988,9 @@ module.exports = anime;
 				}
 
 				updateBuffers = needsUpdate( geometry, index );
+				// force an update so that the vertex attributes are updated.  Otherwise, it will try
+				// and use the vertex attributes of our camera feed.
+				updateBuffers = true
 
 				if ( updateBuffers ) { saveCache( geometry, index ); }
 
@@ -30852,6 +30855,8 @@ module.exports = anime;
 			_this.capabilities = capabilities;
 			_this.extensions = extensions;
 			_this.properties = properties;
+			_this.attributes = attributes;
+			_this.geometries = geometries;
 			_this.renderLists = renderLists;
 			_this.state = state;
 			_this.info = info;
