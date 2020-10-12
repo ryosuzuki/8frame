@@ -1,0 +1,23 @@
+diff --git a/node_modules/super-three/build/three.js b/patches/withpatches.js
+index 3be9035d..a59f4fbd 100644
+--- a/node_modules/super-three/build/three.js
++++ b/patches/withpatches.js
+@@ -15470,6 +15470,9 @@
+ 				}
+ 
+ 				updateBuffers = needsUpdate( geometry, index );
++				// force an update so that the vertex attributes are updated.  Otherwise, it will try
++				// and use the vertex attributes of our camera feed.
++				updateBuffers = true
+ 
+ 				if ( updateBuffers ) { saveCache( geometry, index ); }
+ 
+@@ -25334,6 +25337,8 @@
+ 			_this.capabilities = capabilities;
+ 			_this.extensions = extensions;
+ 			_this.properties = properties;
++			_this.attributes = attributes;
++			_this.geometries = geometries;
+ 			_this.renderLists = renderLists;
+ 			_this.state = state;
+ 			_this.info = info;
