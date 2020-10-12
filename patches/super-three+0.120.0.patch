@@ -1,7 +1,7 @@
-diff --git a/node_modules/super-three/build/three.js b/patches/withpatches.js
+diff --git a/node_modules/super-three/build/three.js b/node_modules/super-three/build/three.js
 index 3be9035d..a59f4fbd 100644
 --- a/node_modules/super-three/build/three.js
-+++ b/patches/withpatches.js
++++ b/node_modules/super-three/build/three.js
 @@ -15470,6 +15470,9 @@
  				}
  
