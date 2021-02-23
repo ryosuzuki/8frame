@@ -1,8 +1,8 @@
 diff --git a/node_modules/super-three/build/three.js b/node_modules/super-three/build/three.js
-index ec96ff1..bb68718 100644
+index 0581d779..1363085d 100644
 --- a/node_modules/super-three/build/three.js
 +++ b/node_modules/super-three/build/three.js
-@@ -24282,6 +24282,8 @@
+@@ -18732,6 +18732,8 @@
  			_this.capabilities = capabilities;
  			_this.extensions = extensions;
  			_this.properties = properties;
