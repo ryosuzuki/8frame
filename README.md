@@ -1,6 +1,7 @@
 # 8Frame
 
 8Frame is 8th Wall's modified version of AFrame.  It has the following changes
+- By default, 8frame 1.2.0 will use webgl1.  You can specify webgl2 using renderer="webgl2: true;". 
 - 8Frame exposes properties in THREE.js's `WebGLRenderer` so that it's compatible with MRCS HoloVideoObject.
 - 8Frame improves AFrame's compatibility with XR8.
 
