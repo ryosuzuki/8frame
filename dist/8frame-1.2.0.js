@@ -68071,7 +68071,9 @@ module.exports.AScene = registerElement('a-scene', {
                 function requestFail (error) {
                   var useAR = xrMode === 'immersive-ar';
                   var mode = useAR ? 'AR' : 'VR';
-                  throw new Error('Failed to enter ' + mode + ' mode (`requestSession`) ' + error);
+                  reject(
+                    new Error('Failed to enter ' + mode + ' mode (`requestSession`) ' + error)
+                  );
                 }
               );
             });
@@ -70534,7 +70536,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('8-Frame Version: 1.2.0 (Date 2021-02-25, Commit #b361094c)');
+console.log('8-Frame Version: 1.2.0 (Date 2021-10-29, Commit #e28557b1)');
 console.log('three Version (https://github.com/supermedium/three.js):',
             pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
