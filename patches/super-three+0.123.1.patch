@@ -1,5 +1,5 @@
 diff --git a/node_modules/super-three/build/three.js b/node_modules/super-three/build/three.js
-index ab70ba3..4d2924c 100644
+index ab70ba3..00bbbee 100644
 --- a/node_modules/super-three/build/three.js
 +++ b/node_modules/super-three/build/three.js
 @@ -16906,24 +16906,10 @@
@@ -127,7 +127,73 @@ index ab70ba3..4d2924c 100644
  			var controller = controllers[index];
  
  			if (controller === undefined) {
-@@ -18152,6 +18150,8 @@
+@@ -17219,6 +17217,7 @@
+ 			});
+ 		};
+ 
++
+ 		this.setSession = function (value) {
+ 			session = value;
+ 
+@@ -17232,31 +17231,38 @@
+ 				session.addEventListener('end', onSessionEnd);
+ 				var attributes = gl.getContextAttributes();
+ 
+-				if (attributes.xrCompatible !== true) {
+-					gl.makeXRCompatible();
+-				}
++				var that = this
++				var onXRCompatible = function () {
++					var layerInit = {
++						antialias: attributes.antialias,
++						alpha: attributes.alpha,
++						depth: attributes.depth,
++						stencil: attributes.stencil,
++						framebufferScaleFactor: framebufferScaleFactor
++					}; // eslint-disable-next-line no-undef
+ 
+-				var layerInit = {
+-					antialias: attributes.antialias,
+-					alpha: attributes.alpha,
+-					depth: attributes.depth,
+-					stencil: attributes.stencil,
+-					framebufferScaleFactor: framebufferScaleFactor
+-				}; // eslint-disable-next-line no-undef
++					baseLayer = new XRWebGLLayer(session, gl, layerInit);
+ 
+-				baseLayer = new XRWebGLLayer(session, gl, layerInit);
++					if (window.XRWebGLBinding && that.layersEnabled) {
++						that.addLayer(baseLayer);
++					} else {
++						session.updateRenderState({
++							baseLayer: baseLayer
++						});
++					}
+ 
+-				if (window.XRWebGLBinding && this.layersEnabled) {
+-					this.addLayer(baseLayer);
+-				} else {
+-					session.updateRenderState({
+-						baseLayer: baseLayer
+-					});
++					session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
++
++					session.addEventListener('inputsourceschange', updateInputSources);
+ 				}
+ 
+-				session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
++				var xrCompatible = attributes.xrCompatible
++				if (xrCompatible !== true) {
++					gl.makeXRCompatible().then(onXRCompatible);
++				} else {
++					onXRCompatible()
++				}
+ 
+-				session.addEventListener('inputsourceschange', updateInputSources);
+ 			}
+ 		};
+ 
+@@ -18152,6 +18158,8 @@
  			_this.capabilities = capabilities;
  			_this.extensions = extensions;
  			_this.properties = properties;

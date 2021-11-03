@@ -22759,6 +22759,7 @@ module.exports = anime;
 			});
 		};
 
+
 		this.setSession = function (value) {
 			session = value;
 
@@ -22772,31 +22773,38 @@ module.exports = anime;
 				session.addEventListener('end', onSessionEnd);
 				var attributes = gl.getContextAttributes();
 
-				if (attributes.xrCompatible !== true) {
-					gl.makeXRCompatible();
+				var that = this
+				var onXRCompatible = function () {
+					var layerInit = {
+						antialias: attributes.antialias,
+						alpha: attributes.alpha,
+						depth: attributes.depth,
+						stencil: attributes.stencil,
+						framebufferScaleFactor: framebufferScaleFactor
+					}; // eslint-disable-next-line no-undef
+
+					baseLayer = new XRWebGLLayer(session, gl, layerInit);
+
+					if (window.XRWebGLBinding && that.layersEnabled) {
+						that.addLayer(baseLayer);
+					} else {
+						session.updateRenderState({
+							baseLayer: baseLayer
+						});
+					}
+
+					session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
+
+					session.addEventListener('inputsourceschange', updateInputSources);
 				}
 
-				var layerInit = {
-					antialias: attributes.antialias,
-					alpha: attributes.alpha,
-					depth: attributes.depth,
-					stencil: attributes.stencil,
-					framebufferScaleFactor: framebufferScaleFactor
-				}; // eslint-disable-next-line no-undef
-
-				baseLayer = new XRWebGLLayer(session, gl, layerInit);
-
-				if (window.XRWebGLBinding && this.layersEnabled) {
-					this.addLayer(baseLayer);
+				var xrCompatible = attributes.xrCompatible
+				if (xrCompatible !== true) {
+					gl.makeXRCompatible().then(onXRCompatible);
 				} else {
-					session.updateRenderState({
-						baseLayer: baseLayer
-					});
+					onXRCompatible()
 				}
 
-				session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
-
-				session.addEventListener('inputsourceschange', updateInputSources);
 			}
 		};
 
@@ -70451,7 +70459,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('8-Frame Version: 1.1.0 (Date 2021-10-29, Commit #fe4b89e1)');
+console.log('8-Frame Version: 1.1.0 (Date 2021-11-03, Commit #b435c454)');
 console.log('three Version (https://github.com/supermedium/three.js):',
             pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
