@@ -1,5 +1,5 @@
 diff --git a/node_modules/super-three/build/three.js b/node_modules/super-three/build/three.js
-index ab70ba3..00bbbee 100644
+index ab70ba3..ed2121d 100644
 --- a/node_modules/super-three/build/three.js
 +++ b/node_modules/super-three/build/three.js
 @@ -16906,24 +16906,10 @@
@@ -80,7 +80,7 @@ index ab70ba3..00bbbee 100644
 +							hand.joints[inputjoint.jointName] = _joint; // ??
 +
 +							hand.add(_joint);
- 						}
++						}
 +
 +						var joint = hand.joints[inputjoint.jointName];
 +
@@ -88,7 +88,7 @@ index ab70ba3..00bbbee 100644
 +							joint.matrix.fromArray(jointPose.transform.matrix);
 +							joint.matrix.decompose(joint.position, joint.rotation, joint.scale);
 +							joint.jointRadius = jointPose.radius;
-+						}
+ 						}
 +
 +						joint.visible = jointPose !== null;
 +					} // Custom events
@@ -135,8 +135,11 @@ index ab70ba3..00bbbee 100644
  		this.setSession = function (value) {
  			session = value;
  
-@@ -17232,31 +17231,38 @@
+@@ -17230,37 +17229,45 @@
+ 				session.addEventListener('squeezestart', onSessionEvent);
+ 				session.addEventListener('squeezeend', onSessionEvent);
  				session.addEventListener('end', onSessionEnd);
++				session.addEventListener('inputsourceschange', onInputSourceChange);
  				var attributes = gl.getContextAttributes();
  
 -				if (attributes.xrCompatible !== true) {
@@ -169,6 +172,8 @@ index ab70ba3..00bbbee 100644
 +							baseLayer: baseLayer
 +						});
 +					}
++
++					session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
  
 -				if (window.XRWebGLBinding && this.layersEnabled) {
 -					this.addLayer(baseLayer);
@@ -176,24 +181,27 @@ index ab70ba3..00bbbee 100644
 -					session.updateRenderState({
 -						baseLayer: baseLayer
 -					});
-+					session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
-+
-+					session.addEventListener('inputsourceschange', updateInputSources);
  				}
  
 -				session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
 +				var xrCompatible = attributes.xrCompatible
 +				if (xrCompatible !== true) {
-+					gl.makeXRCompatible().then(onXRCompatible);
++					return gl.makeXRCompatible().then(onXRCompatible);
 +				} else {
 +					onXRCompatible()
++					return Promise.resolve()
 +				}
  
 -				session.addEventListener('inputsourceschange', updateInputSources);
  			}
  		};
  
-@@ -18152,6 +18158,8 @@
+-		function updateInputSources(event) {
++		function onInputSourceChange(event) {
+ 			var inputSources = session.inputSources; // Assign inputSources to available controllers
+ 
+ 			for (var i = 0; i < controllers.length; i++) {
+@@ -18152,6 +18159,8 @@
  			_this.capabilities = capabilities;
  			_this.extensions = extensions;
  			_this.properties = properties;
