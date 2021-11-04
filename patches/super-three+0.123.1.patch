@@ -1,8 +1,40 @@
 diff --git a/node_modules/super-three/build/three.js b/node_modules/super-three/build/three.js
-index ab70ba3..ed2121d 100644
+index ab70ba3..9541127 100644
 --- a/node_modules/super-three/build/three.js
 +++ b/node_modules/super-three/build/three.js
-@@ -16906,24 +16906,10 @@
+@@ -16893,6 +16893,31 @@
+ 
+ 	Object.assign(WebVRManager.prototype, EventDispatcher.prototype);
+ 
++	function _createForOfIteratorHelperLoose(o, allowArrayLike) {
++		var it;
++
++		if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
++			if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
++				if (it) o = it;
++				var i = 0;
++				return function () {
++					if (i >= o.length) return {
++						done: true
++					};
++					return {
++						done: false,
++						value: o[i++]
++					};
++				};
++			}
++
++			throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
++		}
++
++		it = o[Symbol.iterator]();
++		return it.next.bind(it);
++	}
++
+ 	function WebXRController() {
+ 		this._targetRay = null;
+ 		this._grip = null;
+@@ -16906,24 +16931,10 @@
  				this._hand = new Group();
  				this._hand.matrixAutoUpdate = false;
  				this._hand.visible = false;
@@ -28,7 +60,7 @@ index ab70ba3..ed2121d 100644
  			}
  
  			return this._hand;
-@@ -16993,43 +16979,55 @@
+@@ -16993,43 +17004,55 @@
  				if (hand && inputSource.hand) {
  					handPose = true;
  
@@ -80,7 +112,7 @@ index ab70ba3..ed2121d 100644
 +							hand.joints[inputjoint.jointName] = _joint; // ??
 +
 +							hand.add(_joint);
-+						}
+ 						}
 +
 +						var joint = hand.joints[inputjoint.jointName];
 +
@@ -88,7 +120,7 @@ index ab70ba3..ed2121d 100644
 +							joint.matrix.fromArray(jointPose.transform.matrix);
 +							joint.matrix.decompose(joint.position, joint.rotation, joint.scale);
 +							joint.jointRadius = jointPose.radius;
- 						}
++						}
 +
 +						joint.visible = jointPose !== null;
 +					} // Custom events
@@ -118,7 +150,7 @@ index ab70ba3..ed2121d 100644
  					}
  				} else {
  					if (targetRay !== null) {
-@@ -17102,7 +17100,7 @@
+@@ -17102,7 +17125,7 @@
  			return pose;
  		};
  
@@ -127,7 +159,7 @@ index ab70ba3..ed2121d 100644
  			var controller = controllers[index];
  
  			if (controller === undefined) {
-@@ -17219,6 +17217,7 @@
+@@ -17219,6 +17242,7 @@
  			});
  		};
  
@@ -135,7 +167,7 @@ index ab70ba3..ed2121d 100644
  		this.setSession = function (value) {
  			session = value;
  
-@@ -17230,37 +17229,45 @@
+@@ -17230,37 +17254,45 @@
  				session.addEventListener('squeezestart', onSessionEvent);
  				session.addEventListener('squeezeend', onSessionEvent);
  				session.addEventListener('end', onSessionEnd);
@@ -154,6 +186,16 @@ index ab70ba3..ed2121d 100644
 +						stencil: attributes.stencil,
 +						framebufferScaleFactor: framebufferScaleFactor
 +					}; // eslint-disable-next-line no-undef
++
++					baseLayer = new XRWebGLLayer(session, gl, layerInit);
++
++					if (window.XRWebGLBinding && that.layersEnabled) {
++						that.addLayer(baseLayer);
++					} else {
++						session.updateRenderState({
++							baseLayer: baseLayer
++						});
++					}
  
 -				var layerInit = {
 -					antialias: attributes.antialias,
@@ -162,36 +204,26 @@ index ab70ba3..ed2121d 100644
 -					stencil: attributes.stencil,
 -					framebufferScaleFactor: framebufferScaleFactor
 -				}; // eslint-disable-next-line no-undef
-+					baseLayer = new XRWebGLLayer(session, gl, layerInit);
++					session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
  
 -				baseLayer = new XRWebGLLayer(session, gl, layerInit);
-+					if (window.XRWebGLBinding && that.layersEnabled) {
-+						that.addLayer(baseLayer);
-+					} else {
-+						session.updateRenderState({
-+							baseLayer: baseLayer
-+						});
-+					}
-+
-+					session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
++				}
  
 -				if (window.XRWebGLBinding && this.layersEnabled) {
 -					this.addLayer(baseLayer);
--				} else {
--					session.updateRenderState({
--						baseLayer: baseLayer
--					});
- 				}
- 
--				session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
 +				var xrCompatible = attributes.xrCompatible
 +				if (xrCompatible !== true) {
 +					return gl.makeXRCompatible().then(onXRCompatible);
-+				} else {
+ 				} else {
+-					session.updateRenderState({
+-						baseLayer: baseLayer
+-					});
 +					onXRCompatible()
 +					return Promise.resolve()
-+				}
+ 				}
  
+-				session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
+-
 -				session.addEventListener('inputsourceschange', updateInputSources);
  			}
  		};
@@ -201,7 +233,7 @@ index ab70ba3..ed2121d 100644
  			var inputSources = session.inputSources; // Assign inputSources to available controllers
  
  			for (var i = 0; i < controllers.length; i++) {
-@@ -18152,6 +18159,8 @@
+@@ -18152,6 +18184,8 @@
  			_this.capabilities = capabilities;
  			_this.extensions = extensions;
  			_this.properties = properties;
