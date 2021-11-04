@@ -22771,6 +22771,7 @@ module.exports = anime;
 				session.addEventListener('squeezestart', onSessionEvent);
 				session.addEventListener('squeezeend', onSessionEvent);
 				session.addEventListener('end', onSessionEnd);
+				session.addEventListener('inputsourceschange', onInputSourceChange);
 				var attributes = gl.getContextAttributes();
 
 				var that = this
@@ -22795,20 +22796,20 @@ module.exports = anime;
 
 					session.requestReferenceSpace(referenceSpaceType).then(onRequestReferenceSpace); //
 
-					session.addEventListener('inputsourceschange', updateInputSources);
 				}
 
 				var xrCompatible = attributes.xrCompatible
 				if (xrCompatible !== true) {
-					gl.makeXRCompatible().then(onXRCompatible);
+					return gl.makeXRCompatible().then(onXRCompatible);
 				} else {
 					onXRCompatible()
+					return Promise.resolve()
 				}
 
 			}
 		};
 
-		function updateInputSources(event) {
+		function onInputSourceChange(event) {
 			var inputSources = session.inputSources; // Assign inputSources to available controllers
 
 			for (var i = 0; i < controllers.length; i++) {
@@ -70459,7 +70460,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('8-Frame Version: 1.1.0 (Date 2021-11-03, Commit #b435c454)');
+console.log('8-Frame Version: 1.1.0 (Date 2021-11-04, Commit #4a475a81)');
 console.log('three Version (https://github.com/supermedium/three.js):',
             pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
